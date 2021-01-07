@@ -3,6 +3,7 @@ ___
 
 本项目fork自[Bruuuuuuce/PKUAutoSubmit](https://github.com/Bruuuuuuce/PKUAutoSubmit)，在此基础上对适配过程中遇到的一些问题做了修改，以及可以在个人系统中完美运行~感谢小伙伴们的完美工作！
 ___ 
+
 以下是原项目介绍：
 
 PKU一键出入校备案小工具 v2.3 (2020.10.21)
@@ -70,6 +71,36 @@ pip3 install selenium
 ### Linux
 
 使用 Linux 系统的小伙伴们想必有一定的 shell 基础，那大佬们就自行用 `crontab` 设置吧~
+___
+
+这里来一个crontab的配置demo:
+terminal运行 crontab -e编辑任务，如下：
+```
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+
+# For details see man 4 crontabs
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name  command to be executed
+
+0  9  *  *  * cd /root/pkubeian && ./start.sh  # 即每天的九点运行, 项目目录为/root/pkubeian，root身份运行
+```
+
+然后加载任务
+```
+crontab /etc/crontab
+```
+
+___
+
 
 **Note:** 静默运行的弊端为无法看到任何报错信息，若程序运行有错误，使用者很难得知。故建议采用定时静默运行时，设置备案历史截图功能并定期查看截图，若截图生成说明已成功运行。或者设置微信推送，在移动端即可查看运行结果。
 

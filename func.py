@@ -12,34 +12,33 @@ import json
 warnings.filterwarnings('ignore')
 
 
-def login(driver, userName, password, retry=0):
-    if retry == 3:
-        raise Exception('门户登录失败')
-
-    print('门户登陆中...')
-
-    appID = 'portal2017'
+def login(driver, userName, password):
     iaaaUrl = 'https://iaaa.pku.edu.cn/iaaa/oauth.jsp'
     appName = quote('北京大学校内信息门户新版')
     redirectUrl = 'https://portal.pku.edu.cn/portal2017/ssoLogin.do'
-
     driver.get('https://portal.pku.edu.cn/portal2017/')
-    driver.get(
-        f'{iaaaUrl}?appID={appID}&appName={appName}&redirectUrl={redirectUrl}')
-    WebDriverWait(driver, 5).until(
-        EC.visibility_of_element_located((By.ID, 'logon_button')))
-    driver.find_element_by_id('user_name').send_keys(userName)
-    time.sleep(0.1)
-    driver.find_element_by_id('password').send_keys(password)
-    time.sleep(0.1)
-    driver.find_element_by_id('logon_button').click()
-    try:
-        WebDriverWait(driver,
-                      5).until(EC.visibility_of_element_located((By.ID, 'all')))
-        print('门户登录成功！')
-    except:
-        print('Retrying...')
-        login(driver, userName, password, retry + 1)
+
+    for i in range(5):
+        driver.get(
+            f'{iaaaUrl}?appID=portal2017&appName={appName}&redirectUrl={redirectUrl}'
+        )
+        print('门户登录中...')
+        driver.find_element_by_id('user_name').send_keys(userName)
+        time.sleep(0.1)
+        driver.find_element_by_id('password').send_keys(password)
+        time.sleep(0.1)
+        driver.find_element_by_id('logon_button').click()
+        try:
+            WebDriverWait(driver, 3).until(
+                EC.visibility_of_element_located((By.ID, 'all')))
+            print('门户登录成功！')
+            break
+        except Exception as e:
+            print('Retrying...')
+            # driver.save_screenshot('screenshot'+str(i)+'.png')
+            print("err: ", e)
+        if i == 4:
+            raise Exception('门户登录失败')
 
 
 def go_to_simso(driver):
@@ -47,7 +46,7 @@ def go_to_simso(driver):
     WebDriverWait(driver, 5).until(
         EC.visibility_of_element_located((By.ID, 'tag_s_stuCampusExEnReq')))
     driver.find_element_by_id('tag_s_stuCampusExEnReq').click()
-    time.sleep(1)
+    time.sleep(0.5)
     driver.switch_to.window(driver.window_handles[-1])
     WebDriverWait(driver, 5).until(
         EC.visibility_of_element_located((By.CLASS_NAME, 'el-card__body')))
@@ -56,35 +55,53 @@ def go_to_simso(driver):
 def go_to_application_out(driver):
     go_to_simso(driver)
     driver.find_element_by_class_name('el-card__body').click()
-    WebDriverWait(driver, 5).until(
-        EC.visibility_of_element_located((By.CLASS_NAME, 'el-select')))
+    try:
+        WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, 'el-select')))
+    except Exception as e:
+        print(e)
+        # driver.save_screenshot("timeout.png")
 
 
 def go_to_application_in(driver, userName, password):
     driver.back()
+    #driver.save_screenshot("back1.png")
     driver.back()
+    driver.back()
+    #driver.save_screenshot("back2.png")
     try:
-        WebDriverWait(driver, 5).until(
+        WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.CLASS_NAME, 'el-card__body')))
         time.sleep(0.5)
         driver.find_element_by_class_name('el-card__body').click()
-        WebDriverWait(driver, 5).until(
+        WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.CLASS_NAME, 'el-select')))
-    except:
-        print('检测到会话失效，重新登陆中...')
+    except Exception as e:
+        print("err3: ", e)
+        #driver.save_screenshot("relogin.png")
+        print('检测到会话失效，重新登录中...')
         login(driver, userName, password)
         go_to_simso(driver)
         driver.find_element_by_class_name('el-card__body').click()
-        WebDriverWait(driver, 5).until(
+        WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.CLASS_NAME, 'el-select')))
 
 
 def select_in_out(driver, way):
-    driver.find_element_by_class_name('el-select').click()
-    WebDriverWait(driver, 5).until(
-        EC.visibility_of_element_located(
-            (By.XPATH, f'//li/span[text()="{way}"]')))
-    driver.find_element_by_xpath(f'//li/span[text()="{way}"]').click()
+    try:
+        
+        driver.find_element_by_class_name('el-card__body').click()
+        driver.find_element_by_class_name('el-select').click()
+      
+    
+        #driver.find_element(By.XPATH, '//button[text()="请选择"]').click()
+        WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located(
+                (By.XPATH, f'//li/span[text()="{way}"]')))
+        driver.find_element_by_xpath(f'//li/span[text()="{way}"]').click()
+    except Exception as e:
+        print("err: ", e)
+        #driver.save_screenshot("select.png")
 
 
 def select_campus(driver, campus):
@@ -141,12 +158,37 @@ def click_inPeking(driver):
 
 def submit(driver):
     driver.find_element_by_xpath('//button/span[contains(text(),"保存")]').click()
-    WebDriverWait(driver, 5).until(
+    WebDriverWait(driver, 10).until(
         EC.visibility_of_element_located(
             (By.XPATH, '(//button/span[contains(text(),"提交")])[3]')))
     driver.find_element_by_xpath(
         '(//button/span[contains(text(),"提交")])[3]').click()
     time.sleep(0.1)
+
+
+def screen_capture(driver, path):
+    '''
+    driver.back()
+    driver.save_screenshot("back3.png")
+    driver.back()
+    driver.back()
+    driver.save_screenshot("back4.png")
+    '''
+    go_to_simso(driver)
+    try:
+        WebDriverWait(driver, 5).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, 'el-card__body')))
+    except Exception as e:
+        print("err2: ", e)
+        # driver.save_screenshot("capture1.png")
+    driver.find_elements_by_class_name('el-card__body')[1].click()
+    WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located(
+            (By.XPATH, '//button/span[contains(text(),"加载更多")]')))
+    driver.maximize_window()
+    time.sleep(0.1)
+    driver.save_screenshot(path + 'result.png')
+    print('备案历史截图已保存')
 
 
 def fill_out(driver, campus, reason, destination, track):
@@ -207,21 +249,6 @@ def fill_in(driver, campus, reason, habitation, district, street):
     print('入校备案填报完毕！')
 
 
-def screen_capture(driver, path):
-    driver.back()
-    driver.back()
-    WebDriverWait(driver, 5).until(
-        EC.visibility_of_element_located((By.CLASS_NAME, 'el-card__body')))
-    driver.find_elements_by_class_name('el-card__body')[1].click()
-    WebDriverWait(driver, 5).until(
-        EC.visibility_of_element_located(
-            (By.XPATH, '//button/span[contains(text(),"加载更多")]')))
-    driver.maximize_window()
-    time.sleep(0.1)
-    driver.save_screenshot(path + 'result.png')
-    print('备案历史截图已保存')
-
-
 def wechat_notification(userName, sckey):
     with request.urlopen(
             quote('https://sc.ftqq.com/' + sckey + '.send?text=成功报备&desp=学号' +
@@ -236,18 +263,21 @@ def wechat_notification(userName, sckey):
 
 def run(driver, userName, password, campus, reason, destination, track,
         habitation, district, street, capture, path, wechat, sckey):
+    
     login(driver, userName, password)
     print('=================================')
 
     go_to_application_out(driver)
     fill_out(driver, campus, reason, destination, track)
     print('=================================')
-
-    go_to_application_in(driver, userName, password)
+    login(driver, userName, password)
+    go_to_application_out(driver)
+    #go_to_application_in(driver, userName, password)
     fill_in(driver, campus, reason, habitation, district, street)
     print('=================================')
-
+    
     if capture:
+        login(driver, userName, password)
         screen_capture(driver, path)
         print('=================================')
 
