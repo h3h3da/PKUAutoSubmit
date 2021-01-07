@@ -2,6 +2,7 @@
 ___
 
 本项目fork自[Bruuuuuuce/PKUAutoSubmit](https://github.com/Bruuuuuuce/PKUAutoSubmit)，在此基础上对适配过程中遇到的一些问题做了修改，以及可以在个人系统中完美运行~感谢小伙伴们的完美工作！
+注意：由于没有更新release，所以下载的release，需要替换一下func.py文件。
 ___ 
 
 以下是原项目介绍：
